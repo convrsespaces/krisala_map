@@ -73,6 +73,7 @@ function Home() {
   const lastAppliedTransformRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const isTV = new URLSearchParams(location.search).get("dropdown") === "false";
   const handletenkmClick = (route) => (e) => {
     e?.preventDefault(); // Optional chaining in case event isn't passed
     setIsTransitioning(true);
@@ -219,6 +220,7 @@ function Home() {
       <MapDrawingOverlay
         mapKey={drawingMapKey}
         transformState={zoomTransform}
+        isTV={isTV}
       />
       <LocationInfo />
 

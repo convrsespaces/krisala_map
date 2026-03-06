@@ -140,10 +140,7 @@ const normalizePointFromClientToBounds = (
       : 0;
   const unzoomedX = (localX - positionX) / scale;
   const unzoomedY = (localY - positionY) / scale;
-  const drawingBounds = getDrawingBounds(
-    width,
-    height,
-  );
+  const drawingBounds = getDrawingBounds(width, height);
   const viewboxX = (unzoomedX - drawingBounds.x) / drawingBounds.width;
   const viewboxY = (unzoomedY - drawingBounds.y) / drawingBounds.height;
 
@@ -154,10 +151,7 @@ const normalizePointFromClientToBounds = (
 };
 
 const normalizedPointToViewportPoint = (point, drawingWidth, drawingHeight) => {
-  const drawingBounds = getDrawingBounds(
-    drawingWidth,
-    drawingHeight,
-  );
+  const drawingBounds = getDrawingBounds(drawingWidth, drawingHeight);
   const viewboxX = clamp01(point.x);
   const viewboxY = clamp01(point.y);
 
@@ -240,10 +234,7 @@ const normalizeIncomingPathBySpace = (
 };
 
 const pointsToPathData = (points, toAbsolutePoint) => {
-  if (
-    !Array.isArray(points) ||
-    points.length < 2
-  ) {
+  if (!Array.isArray(points) || points.length < 2) {
     return "";
   }
 
@@ -357,6 +348,7 @@ export default function MapDrawingOverlay({
   mapKey,
   transformState = DEFAULT_TRANSFORM_STATE,
   targetSvgId = "main-map-svg",
+  isTV = false,
 }) {
   const containerRef = useRef(null);
   const drawingStateRef = useRef(null);
@@ -434,7 +426,11 @@ export default function MapDrawingOverlay({
     (point) => {
       const matrixContext = getMapCtm();
       if (!matrixContext) {
-        return normalizedPointToViewportPoint(point, drawingWidth, drawingHeight);
+        return normalizedPointToViewportPoint(
+          point,
+          drawingWidth,
+          drawingHeight,
+        );
       }
 
       const { svgElement, ctm } = matrixContext;
@@ -644,7 +640,11 @@ export default function MapDrawingOverlay({
         return;
       }
 
-      const point = clientPointToMapNormalizedUsingMatrix(clientX, clientY, rect);
+      const point = clientPointToMapNormalizedUsingMatrix(
+        clientX,
+        clientY,
+        rect,
+      );
       const newPath = {
         id: `path_${Date.now()}_${pathCounterRef.current++}`,
         points: [point],
@@ -887,113 +887,115 @@ export default function MapDrawingOverlay({
         </g>
       </svg>
 
-      <div style={styles.controlsContainer}>
-        <div style={styles.controlsButtonsRow}>
-          <button
-            type="button"
-            onClick={handleMainButtonClick}
-            style={{
-              ...styles.mainButton,
-              ...(isDrawingEnabled ? styles.mainButtonActive : {}),
-            }}
-            className="overlay-drawing-button"
-            aria-label={
-              !isDrawingEnabled
-                ? "Enter drawing mode"
-                : isControlsOpen
-                  ? "Hide drawing controls"
-                  : "Show drawing controls"
-            }
-          >
-            <PencilIcon
-              size={20}
-              strokeColor={isDrawingEnabled ? "#ffffff" : "#1f2937"}
-            />
-          </button>
-        </div>
-
-        {isDrawingEnabled && isControlsOpen && (
-          <div style={styles.panel}>
-            <div style={styles.section}>
-              <div style={styles.sectionTitle}>Color</div>
-              <div style={styles.colorRow}>
-                {COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    style={{
-                      ...styles.colorButton,
-                      backgroundColor: color,
-                      ...(strokeColor === color
-                        ? styles.colorButtonSelected
-                        : {}),
-                    }}
-                    onClick={() => setStrokeColor(color)}
-                    aria-label={`Set color ${color}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div style={styles.section}>
-              <div style={styles.sectionTitle}>Thickness</div>
-              <div style={styles.strokeRow}>
-                {STROKE_WIDTHS.map((widthOption) => (
-                  <button
-                    key={widthOption}
-                    type="button"
-                    style={{
-                      ...styles.strokeButton,
-                      ...(strokeWidth === widthOption
-                        ? styles.strokeButtonSelected
-                        : {}),
-                    }}
-                    onClick={() => setStrokeWidth(widthOption)}
-                    aria-label={`Set thickness ${widthOption}`}
-                  >
-                    <span
-                      style={{
-                        ...styles.strokePreview,
-                        width: Math.max(widthOption * 2, 12),
-                        height: Math.max(widthOption, 2),
-                        backgroundColor: strokeColor,
-                      }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={styles.actionsRow}>
-              <button
-                type="button"
-                style={{
-                  ...styles.actionButton,
-                  ...(canUndo ? null : styles.actionButtonDisabled),
-                }}
-                onClick={handleUndo}
-                disabled={!canUndo}
-              >
-                Undo
-              </button>
-              <button
-                type="button"
-                style={styles.actionButton}
-                onClick={handleClearAll}
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                style={styles.actionButton}
-                onClick={disableDrawingMode}
-              >
-                Done
-              </button>
-            </div>
+      {!isTV && (
+        <div style={styles.controlsContainer}>
+          <div style={styles.controlsButtonsRow}>
+            <button
+              type="button"
+              onClick={handleMainButtonClick}
+              style={{
+                ...styles.mainButton,
+                ...(isDrawingEnabled ? styles.mainButtonActive : {}),
+              }}
+              className="overlay-drawing-button"
+              aria-label={
+                !isDrawingEnabled
+                  ? "Enter drawing mode"
+                  : isControlsOpen
+                    ? "Hide drawing controls"
+                    : "Show drawing controls"
+              }
+            >
+              <PencilIcon
+                size={20}
+                strokeColor={isDrawingEnabled ? "#ffffff" : "#333333"}
+              />
+            </button>
           </div>
-        )}
-      </div>
+
+          {isDrawingEnabled && isControlsOpen && (
+            <div style={styles.panel}>
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>Color</div>
+                <div style={styles.colorRow}>
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      style={{
+                        ...styles.colorButton,
+                        backgroundColor: color,
+                        ...(strokeColor === color
+                          ? styles.colorButtonSelected
+                          : {}),
+                      }}
+                      onClick={() => setStrokeColor(color)}
+                      aria-label={`Set color ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>Thickness</div>
+                <div style={styles.strokeRow}>
+                  {STROKE_WIDTHS.map((widthOption) => (
+                    <button
+                      key={widthOption}
+                      type="button"
+                      style={{
+                        ...styles.strokeButton,
+                        ...(strokeWidth === widthOption
+                          ? styles.strokeButtonSelected
+                          : {}),
+                      }}
+                      onClick={() => setStrokeWidth(widthOption)}
+                      aria-label={`Set thickness ${widthOption}`}
+                    >
+                      <span
+                        style={{
+                          ...styles.strokePreview,
+                          width: Math.max(widthOption * 2, 12),
+                          height: Math.max(widthOption, 2),
+                          backgroundColor: strokeColor,
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={styles.actionsRow}>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.actionButton,
+                    ...(canUndo ? null : styles.actionButtonDisabled),
+                  }}
+                  onClick={handleUndo}
+                  disabled={!canUndo}
+                >
+                  Undo
+                </button>
+                <button
+                  type="button"
+                  style={styles.actionButton}
+                  onClick={handleClearAll}
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  style={styles.actionButton}
+                  onClick={disableDrawingMode}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1046,7 +1048,7 @@ const styles = {
     justifyContent: "center",
   },
   mainButtonActive: {
-    backgroundColor: "#0f766e",
+    backgroundColor: "#97BC52",
     color: "#ffffff",
   },
   panel: {

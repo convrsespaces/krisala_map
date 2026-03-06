@@ -82,6 +82,7 @@ function TenKm() {
   };
   const navigate = useNavigate();
   const location = useLocation();
+  const isTV = new URLSearchParams(location.search).get("dropdown") === "false";
   const navigateTo3DView = () => {
     navigate(`/3d-view${location.search || ""}`);
   };
@@ -229,6 +230,7 @@ function TenKm() {
           <MapDrawingOverlay
             mapKey={drawingMapKey}
             transformState={zoomTransform}
+            isTV={isTV}
           />
           <LocationInfo />
           {/* <ActionBtns /> */}
