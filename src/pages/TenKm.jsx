@@ -39,6 +39,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useSocketRoom } from "../socket/socket";
 import MarkWithTippy from "../components/MarkWithTippy";
+import MapDrawingOverlay from "../components/MapDrawingOverlay";
 // import { mark_tenkm_highway } from "../data/mark"; // Commented out for now - will use later
 
 function TenKm() {
@@ -60,9 +61,17 @@ function TenKm() {
   } = useContext(AppContext);
 
   const [show3DView, setShow3DView] = useState(false); // State for toggling
+  const [zoomTransform, setZoomTransform] = useState({
+    scale: 1,
+    positionX: 0,
+    positionY: 0,
+  });
   const deepZoomRef = useRef(null);
   const defaultRotation = 0;
   const rotation = masterplanRotation ?? defaultRotation;
+  const currentMapMode = !sattellite ? "satellite" : "map";
+  const drawingMapKey = `tenkm:${currentMapMode}`;
+  const zoomSyncKey = `tenkm:${currentMapMode}`;
   const setTransformRef = useRef(null);
   const suppressTransformEmitRef = useRef(false);
   const localTransformUpdateRef = useRef(false);
@@ -151,8 +160,12 @@ function TenKm() {
             />
           </div>
 
-          <Zoomable>
+          <Zoomable
+            syncKey={zoomSyncKey}
+            onTransformChange={setZoomTransform}
+          >
             <svg
+              id="main-map-svg"
               preserveAspectRatio="xMidYMid slice"
               viewBox="0 0 1920 1080"
               fill="none"
@@ -213,6 +226,10 @@ function TenKm() {
               </Link>
             </svg>
           </Zoomable>
+          <MapDrawingOverlay
+            mapKey={drawingMapKey}
+            transformState={zoomTransform}
+          />
           <LocationInfo />
           {/* <ActionBtns /> */}
           <div className="absolute bottom-1 left-[20px] text-[9px] text-gray-400 capitalize underline underline-offset-2">

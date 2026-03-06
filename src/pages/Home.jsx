@@ -37,6 +37,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useSocketRoom } from "../socket/socket";
 import { DeepZoomViewer } from "../components/DeepZoomViewer";
+import MapDrawingOverlay from "../components/MapDrawingOverlay";
 
 function Home() {
   useSocketRoom();
@@ -55,9 +56,17 @@ function Home() {
     selectedLandmarkId,
   } = useContext(AppContext);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [zoomTransform, setZoomTransform] = useState({
+    scale: 1,
+    positionX: 0,
+    positionY: 0,
+  });
   const deepZoomRef = useRef(null);
   const defaultRotation = -90;
   const rotation = masterplanRotation ?? defaultRotation;
+  const currentMapMode = !sattellite ? "satellite" : "map";
+  const drawingMapKey = `thirtyfive:${currentMapMode}`;
+  const zoomSyncKey = `thirtyfive:${currentMapMode}`;
   const setTransformRef = useRef(null);
   const suppressTransformEmitRef = useRef(false);
   const localTransformUpdateRef = useRef(false);
@@ -142,8 +151,12 @@ function Home() {
         />
       </div>
 
-      <Zoomable>
+      <Zoomable
+        syncKey={zoomSyncKey}
+        onTransformChange={setZoomTransform}
+      >
         <svg
+          id="main-map-svg"
           preserveAspectRatio="xMidYMid slice"
           // preserveAspectRatio="none"
           svg
@@ -203,6 +216,10 @@ function Home() {
           </Link>
         </svg>
       </Zoomable>
+      <MapDrawingOverlay
+        mapKey={drawingMapKey}
+        transformState={zoomTransform}
+      />
       <LocationInfo />
 
       {isMasterplanOpen && (
