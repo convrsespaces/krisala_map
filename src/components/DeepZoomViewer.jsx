@@ -29,12 +29,12 @@ import React, {
   const DEFAULTS = {
     // CDN base URL for the DZI _files directory (trailing slash required)
     tileBaseUrl:
-      'https://d1ovqzmursgzel.cloudfront.net/krisala-img/krisala-masterplan/masterplan-final_files/',
+      'https://d1ovqzmursgzel.cloudfront.net/krisala-img/krisala-updated-masterplan/',
     format: 'webp',
     tileSize: 512,
     overlap: 1,
-    width: 9933,
-    height: 14041,
+    width: 7016,
+    height: 9934,
   };
   
   // ─── Component ──────────────────────────────────────────────────────────────
