@@ -53,6 +53,7 @@ function TenKm() {
     setSattelite,
     isMasterplanOpen,
     setIsMasterplanOpen,
+    syncMasterplanOpen,
     masterplanRotation,
     setMasterplanRotation,
     masterplanTransform,
@@ -220,10 +221,10 @@ function TenKm() {
                 to={`${location.pathname}${location.search || ""}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  setIsMasterplanOpen(true);
+                  syncMasterplanOpen(true);
                 }}
               >
-                <Logo10km toggleModal={() => setIsMasterplanOpen(true)} />
+                <Logo10km toggleModal={() => syncMasterplanOpen(true)} />
               </Link>
             </svg>
           </Zoomable>
@@ -247,7 +248,7 @@ function TenKm() {
               className="modal"
               style={{ display: "flex" }} // Add this to override the default 'none'
               onClick={() => {
-                setIsMasterplanOpen(false);
+                syncMasterplanOpen(false);
                 setMasterplanRotation(defaultRotation); // Reset rotation when closing
               }}
             >
@@ -255,7 +256,7 @@ function TenKm() {
                 <span
                   className="close-btn1"
                   onClick={() => {
-                    setIsMasterplanOpen(false);
+                    syncMasterplanOpen(false);
                     setMasterplanRotation(defaultRotation); // Reset rotation when closing
                   }}
                 >
@@ -298,7 +299,7 @@ function TenKm() {
                           <button
                             className="modal-control-btn"
                             onClick={() => {
-                              setIsMasterplanOpen(false);
+                              syncMasterplanOpen(false);
                               setMasterplanRotation(defaultRotation);
                             }}
                             title="Close"

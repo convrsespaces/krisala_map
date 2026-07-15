@@ -49,6 +49,7 @@ function Home() {
     setSattelite,
     isMasterplanOpen,
     setIsMasterplanOpen,
+    syncMasterplanOpen,
     masterplanRotation,
     setMasterplanRotation,
     masterplanTransform,
@@ -210,10 +211,10 @@ function Home() {
             to={`${location.pathname}${location.search || ""}`}
             onClick={(e) => {
               e.preventDefault();
-              setIsMasterplanOpen(true);
+              syncMasterplanOpen(true);
             }}
           >
-            <Logo toggleModal={() => setIsMasterplanOpen(true)} />
+            <Logo toggleModal={() => syncMasterplanOpen(true)} />
           </Link>
         </svg>
       </Zoomable>
@@ -229,7 +230,7 @@ function Home() {
           className="modal"
           style={{ display: "flex" }} // Add this to override the default 'none'
           onClick={() => {
-            setIsMasterplanOpen(false);
+            syncMasterplanOpen(false);
             setMasterplanRotation(defaultRotation); // Reset rotation when closing
           }}
         >
@@ -273,7 +274,7 @@ function Home() {
                       <button
                         className="modal-control-btn"
                         onClick={() => {
-                          setIsMasterplanOpen(false);
+                          syncMasterplanOpen(false);
                           setMasterplanRotation(defaultRotation);
                         }}
                         title="Close"

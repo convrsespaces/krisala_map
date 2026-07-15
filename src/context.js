@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { useSocketSync } from "./socket/socket";
 
 export const AppContext = createContext();
@@ -15,12 +15,27 @@ export const AppContextProvider = ({ children }) => {
   const [isMasterplanOpen, setIsMasterplanOpen] = useState(false);
   const [masterplanRotation, setMasterplanRotation] = useState(null);
   const [masterplanTransform, setMasterplanTransform] = useState(null);
-  const suppressEmitRef = useRef(false);
+  const lastSyncedRef = useRef(null);
+  // Order-stable snapshot so a received update and the locally rebuilt state
+  // serialize identically — lets us skip echoing back what we just applied.
+  const serializeCtx = (s) =>
+    JSON.stringify([
+      s.activeMapFilterIds,
+      s.selectedLandmarkId,
+      s.showRadius,
+      s.label,
+      s.isSingleSelect,
+      s.sattellite,
+      s.fullScreenMode,
+      s.showOverlays,
+      s.isMasterplanOpen,
+      s.masterplanRotation,
+      s.masterplanTransform,
+    ]);
 
   const { emitSync } = useSocketSync({
     "context:update": (payload) => {
       if (!payload || typeof payload !== "object") return;
-      suppressEmitRef.current = true;
 
       if (payload.activeMapFilterIds !== undefined) {
         setActiveMapFilterIds(payload.activeMapFilterIds);
@@ -56,16 +71,23 @@ export const AppContextProvider = ({ children }) => {
         setMasterplanTransform(payload.masterplanTransform);
       }
 
-      setTimeout(() => {
-        suppressEmitRef.current = false;
-      }, 0);
+      // Remember exactly what we just applied so the emit effect below does not
+      // bounce it straight back to the sender (prevents the on/off ricochet).
+      lastSyncedRef.current = serializeCtx(payload);
+    },
+    // Master-plan open/close has its own first-class event (in addition to the
+    // context:update snapshot) so it syncs deterministically instead of relying
+    // on the echo-suppressed, multi-burst context snapshot (BUG-007).
+    "masterplan:toggle": (payload) => {
+      if (!payload || typeof payload !== "object") return;
+      if (payload.open !== undefined) {
+        setIsMasterplanOpen(!!payload.open);
+      }
     },
   });
 
   useEffect(() => {
-    if (suppressEmitRef.current) return;
-
-    emitSync("context:update", {
+    const snapshot = {
       activeMapFilterIds,
       selectedLandmarkId,
       showRadius,
@@ -77,7 +99,14 @@ export const AppContextProvider = ({ children }) => {
       isMasterplanOpen,
       masterplanRotation,
       masterplanTransform,
-    });
+    };
+    const serialized = serializeCtx(snapshot);
+    // Skip when local state already matches the last synced snapshot — this is
+    // an echo of a received update, not a genuine local change.
+    if (serialized === lastSyncedRef.current) return;
+    lastSyncedRef.current = serialized;
+
+    emitSync("context:update", snapshot);
   }, [
     activeMapFilterIds,
     selectedLandmarkId,
@@ -92,6 +121,27 @@ export const AppContextProvider = ({ children }) => {
     masterplanTransform,
     emitSync,
   ]);
+
+  // Open/close the master plan AND broadcast a dedicated masterplan:toggle event
+  // so both devices stay in sync regardless of context:update timing (BUG-007).
+  const syncMasterplanOpen = useCallback(
+    (open) => {
+      setIsMasterplanOpen(!!open);
+      emitSync("masterplan:toggle", { open: !!open });
+    },
+    [emitSync]
+  );
+
+  // Expose a global the RN host can invoke to close the master plan (its native
+  // Close button must return to the map, not exit the whole map to Home —
+  // BUG-008). Closing here also broadcasts masterplan:toggle so the peer closes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.__krisalaCloseMasterplan = () => syncMasterplanOpen(false);
+    return () => {
+      delete window.__krisalaCloseMasterplan;
+    };
+  }, [syncMasterplanOpen]);
 
   return (
     <AppContext.Provider
@@ -114,6 +164,7 @@ export const AppContextProvider = ({ children }) => {
         setShowOverlays,
         isMasterplanOpen,
         setIsMasterplanOpen,
+        syncMasterplanOpen,
         masterplanRotation,
         setMasterplanRotation,
         masterplanTransform,
