@@ -85,19 +85,34 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
   };
 
   useEffect(() => {
+    if (!ref.current) return;
     const instances = [];
-    for (let i = 0; i < ref.current.children.length; i++) {
-      if (ref.current.children[i]._tippy)
-        ref.current.children[i]._tippy.destroy();
+    // Support both direct children (e.g. mark_highway) and nested elements (e.g. mark_tenkm_highway inside SVG)
+    const interactiveElements = ref.current.querySelectorAll('[id^="__"]');
+    for (let i = 0; i < interactiveElements.length; i++) {
+      if (interactiveElements[i]._tippy) {
+        interactiveElements[i]._tippy.destroy();
+      }
     }
 
     if (blackout) return;
 
-    for (let i = 0; i < ref.current.children.length; i++) {
-      const ele = ref.current.children[i];
-        ele.style.zIndex = "999999";
+    const elementsToProcess = Array.from(ref.current.querySelectorAll('[id^="__"]'));
+    for (let i = 0; i < elementsToProcess.length; i++) {
+      const ele = elementsToProcess[i];
+      
+      // Check if this is a highway element
+      let isHighwayElement = ele.id.startsWith("__highway ");
+      
+      // Highways should have lower z-index to appear under blackout overlay
+      // Other elements should have high z-index to appear above blackout
+      ele.style.zIndex = isHighwayElement ? "0" : "999999";
       ele.style.cursor = "pointer";
-      if(istenkm){
+      
+      // Only apply istenkm transform if element is NOT inside an SVG with viewBox
+      // (SVG with viewBox handles its own coordinate system, e.g. mark_tenkm_highway)
+      const isInsideSVGWithViewBox = ele.closest('svg[viewBox]') !== null;
+      if(istenkm && !isInsideSVGWithViewBox){
         ele.style.transform = "scale(0.7)";
         ele.style.transformBox = "fill-box";
         ele.style.transformOrigin = "center";
@@ -112,8 +127,11 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
       // });
       // const tippyText = ele.dataset.tippyContentText || "mark";
       let className = ele.id.substr(2, ele.id.indexOf(" ") - 1);
-      let isHighway = className === "highway ";
-      if (className === "highway ") className = ele.id.substr(2);
+      let isHighway = ele.id.startsWith("__highway ");
+      if (isHighway) {
+        // Keep className as "highway" for CSS class
+        className = "highway";
+      }
       // let TextStyle = ele.id.startsWith("__hospital ")
       //   ? "color: black;"
       //   : "color:white;";
@@ -144,7 +162,8 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
       let time = distance_time?.split("_")[1];
 
       tippyText = tippyText.split("_")[0];
-      tippyText = tippyText.slice(0, -1);
+      // Trim whitespace instead of removing last character
+      tippyText = tippyText.trim();
 
       if (tippyText == "metro") {
         tippyText = null;
@@ -152,20 +171,53 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
 
       if (tippyText) {
         // const textWidth = calculateTextWidth(tippyText, className);
+        // For highways, use hover/touch/click, for others use click only
+        const triggerType = isHighway ? "mouseenter focus click" : "click";
+        const hideOnClick = true; // Hide tooltip on click for all elements including highways
+        
+        // For highways, track mouse position to position tooltip at cursor
+        let mouseX = 0;
+        let mouseY = 0;
+        let tippyInstance = null;
+        
+        if (isHighway) {
+          const handleMouseMove = (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            // Update tooltip position dynamically if it's visible
+            if (tippyInstance && tippyInstance.state.isVisible) {
+              tippyInstance.setProps({
+                getReferenceClientRect: () => ({
+                  width: 0,
+                  height: 0,
+                  top: mouseY,
+                  left: mouseX,
+                  right: mouseX,
+                  bottom: mouseY,
+                }),
+              });
+            }
+          };
+          
+          ele.addEventListener("mousemove", handleMouseMove);
+          // Store handler for cleanup
+          ele._highwayMouseMoveHandler = handleMouseMove;
+        }
+        
         const instance = tippy(ele, {
           content: `
            <div class="${className} tippy-mark m-0 capitalize overlay-can-hide items-start justify-start" id="${
             ele.id
-          }" style= max-width: 300px; white-space: normal;" >
+          }" style="max-width: 300px; white-space: normal;" >
 
            <div class="flex items-start justify-start"><p class="m-0 p-0">${tippyText}</p></div>
-            <div >
+            ${!isHighway ? `<div >
              ${tippyLocationInfoForData(distance, time, TextStyle, FillStyle)}
-             </div>
+             </div>` : ''}
            </div>
           `,
           animation: "shift-toward",
-          placement: `${
+          placement: isHighway ? "top" : `${
             [].some((str) =>
               tippyText.includes(str)
             )
@@ -176,15 +228,37 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
           allowHTML: true,
           arrow: false,
           followCursor: false,
+          getReferenceClientRect: isHighway 
+            ? () => ({
+                width: 0,
+                height: 0,
+                top: mouseY || 0,
+                left: mouseX || 0,
+                right: mouseX || 0,
+                bottom: mouseY || 0,
+              })
+            : null,
           interactive: true,
-          offset: [0, 0],
-          trigger: "click",
-          sticky: true,
-          plugins: [sticky],
+          offset: isHighway ? [0, 10] : [0, 0],
+          trigger: triggerType,
+          sticky: isHighway ? false : true,
+          plugins: isHighway ? [] : [sticky],
           zIndex: 5,
           showOnCreate: false, // Ensure it does not show on create
-          hideOnClick: true,
-          onShow: () => {
+          hideOnClick: hideOnClick,
+          onTrigger: isHighway 
+            ? (instance, event) => {
+                // Capture mouse position when tooltip is triggered
+                if (event && event.clientX !== undefined) {
+                  mouseX = event.clientX;
+                  mouseY = event.clientY;
+                }
+              }
+            : undefined,
+          onShow: (instance) => {
+            if (isHighway) {
+              tippyInstance = instance;
+            }
             if (suppressEmit) return;
             if (activeMarkId && activeMarkId !== ele.id) {
               hideMarkTippy(activeMarkId);
@@ -193,6 +267,9 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
             emitSync("mark:tippy", { id: ele.id, open: true });
           },
           onHide: () => {
+            if (isHighway) {
+              tippyInstance = null;
+            }
             if (suppressEmit) return;
             if (activeMarkId === ele.id) {
               activeMarkId = null;
@@ -202,6 +279,15 @@ function MarkWithTippy({ children, bgColor = "#ffffffdd" }) {
           appendTo: document.getElementById("app"),
         });
         instances.push(instance);
+        
+        // Cleanup mouse move handler on destroy
+        if (isHighway && ele._highwayMouseMoveHandler) {
+          const originalDestroy = instance.destroy;
+          instance.destroy = () => {
+            ele.removeEventListener("mousemove", ele._highwayMouseMoveHandler);
+            originalDestroy.call(instance);
+          };
+        }
       }
     }
     return () => {

@@ -47,4 +47,8 @@ export const distaces = {
     distance: "29.7",
     time: "60",
   },
+  amity_university: {
+    distance: "18.2",
+    time: "35",
+  },
 };

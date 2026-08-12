@@ -8,7 +8,7 @@ function Blackout() {
 
 
     return (
-        <g className={`transition-all ${(blackout) ? "opacity-2": "opacity-0"}`} style={{zIndex:"1"}}>
+        <g className={`transition-all ${(blackout) ? "opacity-2": "opacity-0"}`} style={{zIndex:"1", pointerEvents: "none"}}>
           <g className={`overlay-can-hide`} >
            {mark_blackout}
           </g>

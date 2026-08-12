@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import "../App.css";
 import "../Attributes.css";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -22,36 +22,51 @@ import NavigationButtons from "../components/NavigationButtons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { tenkm_locotion_icon } from "../components/Icons";
 import Legends from "../components/atoms/Legends";
+import HighwayLegend from "../components/atoms/HighwayLegend";
 import ActiveRoute from "../components/ActiveRoute";
 import Logo10km, { MasterPlan } from "../components/Logo10km";
 import { AppContext } from "../context";
 import LabelSvg from "../data/LabelSvgs";
 import LegendFilter from "../components/atoms/LabelLegends";
 import { MapSwitcher10Km } from "../components/LeftSideButton";
-import {
-  TransformWrapper,
-  TransformComponent,
-} from "react-zoom-pan-pinch";
+import { DeepZoomViewer } from "../components/DeepZoomViewer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faMagnifyingGlassPlus,
-  faMagnifyingGlassMinus,
   faRotateRight,
   faRotateLeft,
   faRotate,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useSocketRoom } from "../socket/socket";
+import MarkWithTippy from "../components/MarkWithTippy";
+// import { mark_tenkm_highway } from "../data/mark"; // Commented out for now - will use later
 
 function TenKm() {
   useSocketRoom();
   // Call getMapFilterIds with the current route
   const mapFilterIds = getMapFilterIds("/tenkm");
-  const { label, setLabel, sattellite, setSattelite } = useContext(AppContext);
+  const {
+    label,
+    setLabel,
+    sattellite,
+    setSattelite,
+    isMasterplanOpen,
+    setIsMasterplanOpen,
+    masterplanRotation,
+    setMasterplanRotation,
+    masterplanTransform,
+    setMasterplanTransform,
+    selectedLandmarkId,
+  } = useContext(AppContext);
 
   const [show3DView, setShow3DView] = useState(false); // State for toggling
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0, containerSize: 0 });
+  const deepZoomRef = useRef(null);
+  const defaultRotation = 0;
+  const rotation = masterplanRotation ?? defaultRotation;
+  const setTransformRef = useRef(null);
+  const suppressTransformEmitRef = useRef(false);
+  const localTransformUpdateRef = useRef(false);
+  const lastAppliedTransformRef = useRef(null);
 
   const toggleView = () => {
     setShow3DView(!show3DView); // Toggle the state
@@ -62,11 +77,71 @@ function TenKm() {
     navigate(`/3d-view${location.search || ""}`);
   };
 
+  useEffect(() => {
+    if (!isMasterplanOpen) return;
+    if (masterplanRotation == null) {
+      setMasterplanRotation(defaultRotation);
+    }
+    if (!masterplanTransform) {
+      setMasterplanTransform({ scale: 1, positionX: 0, positionY: 0 });
+    }
+  }, [
+    isMasterplanOpen,
+    masterplanRotation,
+    masterplanTransform,
+    setMasterplanRotation,
+    setMasterplanTransform,
+  ]);
+
+  useEffect(() => {
+    if (!isMasterplanOpen) return;
+    if (!masterplanTransform) return;
+    if (!setTransformRef.current) return;
+
+    if (localTransformUpdateRef.current) {
+      localTransformUpdateRef.current = false;
+      return;
+    }
+
+    const last = lastAppliedTransformRef.current;
+    if (
+      last &&
+      last.scale === masterplanTransform.scale &&
+      last.positionX === masterplanTransform.positionX &&
+      last.positionY === masterplanTransform.positionY
+    ) {
+      return;
+    }
+
+    suppressTransformEmitRef.current = true;
+    lastAppliedTransformRef.current = masterplanTransform;
+    setTransformRef.current(
+      masterplanTransform.positionX,
+      masterplanTransform.positionY,
+      masterplanTransform.scale,
+      0
+    );
+  }, [isMasterplanOpen, masterplanTransform]);
+
+  const handleTransformed = (_ctx, state) => {
+    if (suppressTransformEmitRef.current) {
+      suppressTransformEmitRef.current = false;
+      return;
+    }
+    localTransformUpdateRef.current = true;
+    setMasterplanTransform({
+      scale: state.scale,
+      positionX: state.positionX,
+      positionY: state.positionY,
+    });
+  };
+
   return (
     <>
       {
         <Style
-          className="h-screen w-screen overflow-hidden no-scrollbar selection:bg-none"
+          className={`h-screen w-screen overflow-hidden no-scrollbar selection:bg-none ${selectedLandmarkId ? "landmark-selected" : ""
+            }`}
           id="app"
         >
           <div className="bg-[rgba(255,255,255)] absolute right-2 top-2 z-10 w-fit h-fit rounded-xl p-2">
@@ -75,6 +150,7 @@ function TenKm() {
               className="w-[180px] h-auto"
             />
           </div>
+
           <Zoomable>
             <svg
               preserveAspectRatio="xMidYMid slice"
@@ -89,15 +165,24 @@ function TenKm() {
                 id="image0_1_2"
                 height="100%"
                 style={{ objectFit: "contain" }}
-                xlinkHref={`/images/${
-                  !sattellite ? "tensat.webp" : "10kmmap.png"
-                }`}
+                xlinkHref={`/images/${!sattellite ? "tensat.webp" : "10kmmap.png"
+                  }`}
               />
               {/* <Roads /> */}
 
               {svg_defs}
 
               <Radius />
+              
+              {/* Highway paths must be rendered before Blackout to appear under the overlay */}
+              {/* Commented out for now - will use later
+              <g className="overlay-can-hide marks highway">
+                <MarkWithTippy>
+                  {mark_tenkm_highway}
+                </MarkWithTippy>
+              </g>
+              */}
+
               <Blackout />
               <ActiveMarksOnMap
                 filterIdsToShow={mapFilterIds.filter(
@@ -110,18 +195,27 @@ function TenKm() {
                   (filter) => filter === "map-filter-landmarks"
                 )}
               />
+
               {label && <LabelSvg label={label} />}
               {/* <Link className="masterplan">
                 <MasterPlan toggleModal={()=>setIsModalOpen(true)}/>
               </Link> */}
-              <Link className="logo-bounce" id="logoTrigger">
-                <Logo10km toggleModal={() => setIsModalOpen(true)} />
+              <Link
+                className="logo-bounce"
+                id="logoTrigger"
+                to={`${location.pathname}${location.search || ""}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsMasterplanOpen(true);
+                }}
+              >
+                <Logo10km toggleModal={() => setIsMasterplanOpen(true)} />
               </Link>
             </svg>
           </Zoomable>
           <LocationInfo />
-          <ActionBtns />
-          <div className="absolute bottom-1 left-[20px] text-gray-400 capitalize underline underline-offset-2">
+          {/* <ActionBtns /> */}
+          <div className="absolute bottom-1 left-[20px] text-[9px] text-gray-400 capitalize underline underline-offset-2">
             *Note: Map Not to scale
           </div>
           <Compass angle={0} />
@@ -129,110 +223,45 @@ function TenKm() {
             <MapFilters />
           </CollapsiblePanel>
 
-          {isModalOpen && (
+          {isMasterplanOpen && (
             <div
               className="modal"
               style={{ display: "flex" }} // Add this to override the default 'none'
               onClick={() => {
-                setIsModalOpen(false);
-                setRotation(0); // Reset rotation when closing
+                setIsMasterplanOpen(false);
+                setMasterplanRotation(defaultRotation); // Reset rotation when closing
               }}
             >
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <span
                   className="close-btn1"
                   onClick={() => {
-                    setIsModalOpen(false);
-                    setRotation(0); // Reset rotation when closing
+                    setIsMasterplanOpen(false);
+                    setMasterplanRotation(defaultRotation); // Reset rotation when closing
                   }}
                 >
                   &times;
                 </span>
                 <div className="image-container-wrapper">
-                  <TransformWrapper
-                    initialScale={1}
-                    minScale={0.5}
-                    maxScale={5}
-                    wheel={{ step: 0.1 }}
-                    doubleClick={{ disabled: false }}
-                    panning={{ disabled: false }}
-                    limitToBounds={true}
-                    centerOnInit={true}
-                  >
-                    {({ zoomIn, zoomOut, resetTransform }) => (
-                      <>
-                        <TransformComponent
-                          wrapperStyle={{
-                            width: "100%",
-                            height: "100%",
-                            overflow: "visible",
-                          }}
-                          contentStyle={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <img
-                            src="/images/masterplan.webp"
-                            alt="Master Plan"
-                            className="modal-image"
-                            onLoad={(e) => {
-                              const img = e.target;
-                              const maxViewport = Math.min(window.innerWidth, window.innerHeight);
-                              // Calculate scale to fit viewport
-                              const scale = Math.min(
-                                maxViewport / img.naturalWidth,
-                                maxViewport / img.naturalHeight
-                              );
-                              // Use the larger dimension to accommodate rotation
-                              const maxDimension = Math.max(img.naturalWidth, img.naturalHeight);
-                              const containerSize = maxDimension * scale;
-                              setImageDimensions({
-                                width: img.naturalWidth * scale,
-                                height: img.naturalHeight * scale,
-                                containerSize: containerSize,
-                              });
-                            }}
-                            style={{
-                              width: imageDimensions.width || "auto",
-                              height: imageDimensions.height || "auto",
-                              maxWidth: "100vw",
-                              maxHeight: "100vh",
-                              objectFit: "contain",
-                              transform: `rotate(${rotation}deg)`,
-                              transition: "transform 0.3s ease",
-                              display: "block",
-                            }}
-                          />
-                        </TransformComponent>
-                        <div className="modal-controls">
+                <DeepZoomViewer
+                    ref={deepZoomRef}
+                    rotation={rotation}
+                    minZoomLevel={0.5}
+                    maxZoomLevel={20}
+                    onZoomChange={(zoom) => console.log('Zoom level:', zoom)}
+                    onReady={(viewer) => console.log('[MasterPlan] DeepZoom viewer ready')}
+                  />
+                  <div className="modal-controls">
                           <button
                             className="modal-control-btn"
-                            onClick={() => zoomIn()}
-                            title="Zoom In"
-                          >
-                            <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
-                          </button>
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => zoomOut()}
-                            title="Zoom Out"
-                          >
-                            <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
-                          </button>
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => setRotation((prev) => prev + 90)}
+                            onClick={() => setMasterplanRotation((prev) => (prev ?? defaultRotation) + 90)}
                             title="Rotate Right"
                           >
                             <FontAwesomeIcon icon={faRotateRight} />
                           </button>
                           <button
                             className="modal-control-btn"
-                            onClick={() => setRotation((prev) => prev - 90)}
+                            onClick={() => setMasterplanRotation((prev) => (prev ?? defaultRotation) - 90)}
                             title="Rotate Left"
                           >
                             <FontAwesomeIcon icon={faRotateLeft} />
@@ -240,17 +269,24 @@ function TenKm() {
                           <button
                             className="modal-control-btn"
                             onClick={() => {
-                              resetTransform();
-                              setRotation(0);
+                              setMasterplanRotation(defaultRotation);
+                              deepZoomRef.current?.resetView();
                             }}
                             title="Reset"
                           >
                             <FontAwesomeIcon icon={faRotate} />
                           </button>
-                        </div>
-                      </>
-                    )}
-                  </TransformWrapper>
+                          <button
+                            className="modal-control-btn"
+                            onClick={() => {
+                              setIsMasterplanOpen(false);
+                              setMasterplanRotation(defaultRotation);
+                            }}
+                            title="Close"
+                          >
+                            <FontAwesomeIcon icon={faXmark} />
+                          </button>
+</div>
                 </div>
                 <div className="disclaimer-overlay">
                   <p>
@@ -265,6 +301,7 @@ function TenKm() {
             </div>
           )}
           {/* <Legends /> */}
+          <HighwayLegend />
           <MapSwitcher10Km
             sattellite={sattellite}
             setSattelite={setSattelite}

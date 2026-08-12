@@ -231,26 +231,27 @@ const LegendFilter = ({ label }) => {
   return (
     <div
       className="overlay-can-hide fixed top-24 left-[2%]"
-      style={{ top: "55%", transform: "translateY(-50%)" }}
+      style={{ top: "40%", transform: "translateY(-50%)" }}
     >
       <div
-        className="space-y-2 backdrop-blur-[6px] bg-[black]/50 rounded-lg p-4 shadow-lg"
-        style={{ minHeight: "130px", minWidth: "200px" }}
+        className="space-y-1 backdrop-blur-[6px] bg-[black]/50 rounded-lg p-2 shadow-lg scrollbar-hide"
       >
-        <div className="text-white text-center">
-          <span className="font-medium ">
+        <div className="text-white text-center sticky top-0  -mx-2 -mt-2 py-1 mb-1 z-10 rounded-t-lg">
+          <span className="font-medium text-xs uppercase tracking-wider">
             {label?.toLowerCase() === "schools" ? "Education" : label}
           </span>
         </div>
-        <ul className="text-white">
+        <ul className="text-white px-1">
           {data[label]?.map((item, index) => (
             <li
               key={index}
-              className="flex gap-x-1 text-sm items-center py-1 hover:bg-white/10 rounded-md transition-colors duration-200"
+              className="flex gap-x-1 text-[10px] items-center py-0.5 hover:bg-white/10 rounded px-1 transition-colors duration-200"
             >
-              <span className="text-sm">{index + 1}.</span>
-              <span>{item.split("(")[0]}</span>
-              <TippyLocationInfoLabel title={item} />
+              <span className="text-[10px] font-medium min-w-[15px]">{index + 1}.</span>
+              <span className="truncate max-w-[180px]" title={item.split("(")[0]}>{item.split("(")[0]}</span>
+              <div className="ml-auto">
+                <TippyLocationInfoLabel title={item} />
+              </div>
             </li>
           ))}
         </ul>

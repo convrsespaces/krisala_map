@@ -162,6 +162,18 @@ export default function Hotspots({ children }) {
         `__landmark ${selectedLandmarkId}`
       );
       if (element) {
+        const landmarksToMove = ["Balewadi Stadium", "Amity University"];
+        const isTargetLandmark = landmarksToMove.some((l) =>
+          selectedLandmarkId.includes(l)
+        );
+        const logoTrigger =
+          isTargetLandmark && document.getElementById("logoTrigger");
+
+        const theme =
+          isTargetLandmark && !logoTrigger
+            ? "repositioned-route-info"
+            : "selected-landmark";
+
         const normalizedSelectedId = selectedLandmarkId
           .toLowerCase()
           .replace(/\s+/g, "_");
@@ -170,21 +182,25 @@ export default function Hotspots({ children }) {
             ? "top"
             : selectedLandmarkId.includes("Dam") ||
               selectedLandmarkId.includes("Valley")
-            ? "bottom"
-            : "top";
+              ? "bottom"
+              : "top";
 
-        tippyInstance = tippy(element, {
+        tippyInstance = tippy(logoTrigger || element, {
           content: TippyLocationInfo(selectedLandmarkId),
+          theme,
           animation: "shift-toward",
-          placement,
+          placement: logoTrigger ? "bottom" : placement,
           allowHTML: true,
           arrow: false,
-          offset: [10, 0],
+          offset: logoTrigger ? [0, 10] : [10, 0],
           trigger: "manual",
           showOnCreate: true,
           hideOnClick: false,
           interactive: true,
-          appendTo: document.getElementById("app") || document.body,
+          appendTo:
+            theme === "repositioned-route-info" || logoTrigger
+              ? document.body
+              : document.getElementById("app") || document.body,
         });
       }
     }

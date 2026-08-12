@@ -52,9 +52,8 @@ const attachCoreListeners = () => {
 
   socket.on("connect", () => {
     isConnecting = false;
-    const roomToJoin = currentRoomId || PROJECT_ID;
-    if (roomToJoin) {
-      socket.emit("joinRoom", roomToJoin);
+    if (currentRoomId) {
+      socket.emit("joinRoom", currentRoomId);
     }
   });
 
@@ -97,8 +96,17 @@ export const socketConnect = (onInventoryUpdated, roomId = null) => {
     ensureSocket();
     attachCoreListeners();
 
+    if (!roomId && currentRoomId && socket && socket.connected) {
+      socket.emit("leaveRoom", currentRoomId);
+      currentRoomId = null;
+    }
+
     if (socket.connected) {
-      if (roomId && roomId !== currentRoomId) {
+      if (!roomId) {
+        currentOnInventoryUpdated = onInventoryUpdated;
+        return;
+      }
+      if (roomId !== currentRoomId) {
         if (currentRoomId) {
           socket.emit("leaveRoom", currentRoomId);
         }
@@ -119,7 +127,7 @@ export const socketConnect = (onInventoryUpdated, roomId = null) => {
 
     isConnecting = true;
     currentOnInventoryUpdated = onInventoryUpdated;
-    currentRoomId = roomId || currentRoomId || PROJECT_ID;
+    currentRoomId = roomId || null;
 
     socket.connect();
   } catch (e) {
@@ -130,7 +138,14 @@ export const socketConnect = (onInventoryUpdated, roomId = null) => {
 
 export const socketChangeRoom = (newRoomId) => {
   if (!socket || !socket.connected) return;
-  if (!newRoomId || newRoomId === currentRoomId) return;
+  if (!newRoomId) {
+    if (currentRoomId) {
+      socket.emit("leaveRoom", currentRoomId);
+    }
+    currentRoomId = null;
+    return;
+  }
+  if (newRoomId === currentRoomId) return;
 
   if (currentRoomId) {
     socket.emit("leaveRoom", currentRoomId);
@@ -168,7 +183,8 @@ export const emitSyncEvent = (type, payload = {}) => {
   const activeSocket = ensureSocket();
   if (!activeSocket || !activeSocket.connected) return false;
 
-  const roomId = currentRoomId || PROJECT_ID;
+  const roomId = currentRoomId;
+  if (!roomId) return false;
   activeSocket.emit("sync_event", {
     type,
     payload,
@@ -218,12 +234,10 @@ export const useSocketRoom = (onInventoryUpdated) => {
   );
 
   useEffect(() => {
-    const targetRoom = role || getCurrentRoomId() || PROJECT_ID;
-    socketConnect(onInventoryUpdated, targetRoom);
+    socketConnect(onInventoryUpdated, role);
   }, [onInventoryUpdated, role]);
 
   useEffect(() => {
-    if (!role) return;
     socketChangeRoom(role);
   }, [role]);
 

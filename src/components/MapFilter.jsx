@@ -360,20 +360,20 @@ const MapFilters = () => {
     // Remove show-all-active class when individual filters are clicked
     document.body.classList.remove("show-all-active");
 
+    // Always use Single Select logic for activeMapFilterIds
+    setActiveMapFilterIds([id]);
+    setLastSelectedFilterId(id);
+
     if (isSingleSelect) {
-      setActiveMapFilterIds([id]);
-      const selectedFilter = mapFilters.find((filter) => filter.id === id);
-      if (selectedFilter) {
-        setLabel(selectedFilter.title);
-      }
-      setLastSelectedFilterId(id);
-    } else {
-      if (isFilterActive(id)) {
-        setActiveMapFilterIds((old) => old.filter((_id) => _id !== id));
+      if (id === "map-filter-landmarks") {
+        setLabel("Landmarks");
       } else {
-        setActiveMapFilterIds((old) => [...old, id]);
-        setLastSelectedFilterId(id);
+        const selectedFilter = mapFilters.find((filter) => filter.id === id);
+        if (selectedFilter) {
+          setLabel(selectedFilter.title);
+        }
       }
+    } else {
       setLabel(null);
     }
   };
@@ -469,19 +469,25 @@ const MapFilters = () => {
         </div>
       </div> */}
 
-      <div className="overlay-can-hide fixed bottom-3 left-1/2 transform -translate-x-1/2 z-50 ">
-        <div className="flex justify-center items-center gap-2">
+      <div className="overlay-can-hide fixed bottom-0 left-1/2 transform -translate-x-1/2 z-50 w-[96vw] max-w-[1600px] px-2">
+        <div className="flex justify-center items-center" style={{ gap: 'clamp(0.1rem, 0.2vw, 0.35rem)' }}>
           <button
             onClick={onShowAllClicked}
             className={`
-        p-1 text-xs text-white rounded-2xl w-24 whitespace-nowrap
-        flex items-center justify-center gap-1 hover:opacity-90 transition-all button
-        ${
-          isAllFiltersActive()
-            ? "bg-[#cca05b] text-[#1C2632] active"
-            : "bg-[#76b82a]"
-        }
+        flex-1 rounded-2xl whitespace-nowrap
+        flex items-center justify-center hover:opacity-90 transition-all button
+        ${isAllFiltersActive()
+                ? "bg-[#cca05b] text-[#1C2632] active"
+                : "bg-[#76b82a]"
+              }
       `}
+            style={{
+              padding: 'clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.25rem, 0.5vw, 0.6rem)',
+              fontSize: 'clamp(0.45rem, 0.7vw, 0.8rem)',
+              minWidth: 'clamp(2.5rem, 4.5vw, 5.5rem)',
+              maxWidth: 'clamp(4.5rem, 7vw, 8rem)'
+            }}
+
           >
             <span className="truncate">
               {isAllFiltersActive() ? "Hide All" : "Show All"}
@@ -491,16 +497,22 @@ const MapFilters = () => {
           <button
             onClick={toggleSingleSelect}
             className={`
-        p-1 text-xs rounded-2xl w-24 whitespace-nowrap
-        flex items-center justify-center gap-1 transition-all button
-        ${
-          isSingleSelect
-            ? "bg-[#cca05b] text-[#1C2632] active"
-            : !isSingleSelect && isAllFiltersActive()
-            ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-            : "bg-[#76b82a] text-white hover:opacity-90"
-        }
+        flex-1 rounded-2xl whitespace-nowrap
+        flex items-center justify-center transition-all button
+        ${isSingleSelect
+                ? "bg-[#cca05b] text-[#1C2632] active"
+                : !isSingleSelect && isAllFiltersActive()
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  : "bg-[#76b82a] text-white hover:opacity-90"
+              }
       `}
+            style={{
+              padding: 'clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.25rem, 0.5vw, 0.6rem)',
+              fontSize: 'clamp(0.45rem, 0.7vw, 0.8rem)',
+              minWidth: 'clamp(2.5rem, 4.5vw, 5.5rem)',
+              maxWidth: 'clamp(4.5rem, 7vw, 8rem)'
+            }}
+
           >
             <span className="truncate">Show Label</span> {/* Added truncate */}
           </button>
@@ -509,16 +521,23 @@ const MapFilters = () => {
               key={filter.id}
               onClick={() => handleFilterClick(filter.id)}
               className={`
-          p-1 text-xs rounded-2xl w-24 whitespace-nowrap
-          flex items-center justify-center gap-1 hover:opacity-90 transition-all button
-          ${
-            isFilterActive(filter.id)
-              ? "bg-[#cca05b] text-[#1C2632] active"
-              : "bg-[#76b82a] text-white"
-          } button-icon ${filter.className}
+          flex-1 rounded-2xl whitespace-nowrap
+          flex items-center justify-center hover:opacity-90 transition-all button
+          ${isFilterActive(filter.id)
+                  ? "bg-[#cca05b] text-[#1C2632] active"
+                  : "bg-[#76b82a] text-white"
+                } button-icon ${filter.className}
         `}
+              style={{
+                padding: 'clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.25rem, 0.5vw, 0.6rem)',
+                fontSize: 'clamp(0.45rem, 0.7vw, 0.8rem)',
+                minWidth: 'clamp(2.5rem, 4.5vw, 5.5rem)',
+                maxWidth: 'clamp(4.5rem, 7vw, 8rem)',
+                gap: 'clamp(0.08rem, 0.15vw, 0.2rem)'
+              }}
+
             >
-              {filter.icon && <span className="icon">{filter.icon}</span>}
+              {filter.icon && <span className="icon" style={{ fontSize: 'clamp(0.45rem, 0.7vw, 0.8rem)' }}>{filter.icon}</span>}
               <span className="truncate">
                 {filter.title === "Schools" ? "Education" : filter.title}
               </span>{" "}

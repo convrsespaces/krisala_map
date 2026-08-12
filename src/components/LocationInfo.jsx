@@ -49,19 +49,19 @@ function LocationInfo() {
 
   return (
     <div
-      className={`overlay-can-hide absolute ${
-        selectedLandmarkId.includes("Amity University")
-          ? "bottom-[33%]"
-          : "bottom-[10%]"
-      } left-[17vw] z-30 route-details flex flex-row bg-[rgba(0,0,0,0.5)] backdrop-blur-sm text-slate-200 rounded-md overflow-hidden`}
-      style={{ width: "32vw" }}
+      className={`overlay-can-hide absolute ${selectedLandmarkId.includes("Amity University")
+        ? "bottom-[33%]"
+        : "bottom-[10%]"
+        } right-[2%] z-30 route-details flex flex-row bg-[rgba(0,0,0,0.5)] backdrop-blur-sm text-slate-200 rounded-md overflow-hidden w-[320px] 2xl:w-[38vw] max-w-[90vw]`}
     >
       {imageUrls?.[selectedLandmarkImageName] && (
-        <img
-          className="w-[12vw] h-[20] object-cover"
-          src={imageUrls?.[selectedLandmarkImageName]}
-          alt={selectedLandmarkId}
-        />
+        <div className="w-[115px] min-w-[115px] 2xl:w-[160px] 2xl:min-w-[160px] flex-shrink-0">
+          <img
+            className="w-full h-full object-cover"
+            src={imageUrls?.[selectedLandmarkImageName]}
+            alt={selectedLandmarkId}
+          />
+        </div>
       )}
       <div className="p-3">
         <div className="text-lg font-semibold mb-2">{selectedLandmarkId}</div>
