@@ -29,7 +29,7 @@ import React, {
   const DEFAULTS = {
     // CDN base URL for the DZI _files directory (trailing slash required)
     tileBaseUrl:
-      'https://d1ovqzmursgzel.cloudfront.net/krisala-img/krisala-updated-masterplan/',
+      'https://d1ovqzmursgzel.cloudfront.net/krisala-img/krisala-masterplan-plu/',
     format: 'webp',
     tileSize: 512,
     overlap: 1,
