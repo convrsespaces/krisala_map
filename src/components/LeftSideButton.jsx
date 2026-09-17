@@ -124,7 +124,7 @@ export const MapSwitcher = ({ sattellite, setSattelite }) => {
   return (
     <div
       onClick={() => setSattelite(!sattellite)}
-      className="overlay-can-hide absolute bottom-[7%] left-32 z-50 h-18 w-28 cursor-pointer items-center "
+      className="overlay-can-hide absolute bottom-[75px] left-28 z-50 h-12 w-20 cursor-pointer items-center "
     >
       <img
         className="rounded-lg"
@@ -138,7 +138,7 @@ export const MapSwitcher10Km = ({ sattellite, setSattelite }) => {
   return (
     <div
       onClick={() => setSattelite(!sattellite)}
-      className="overlay-can-hide absolute bottom-[7%] left-32 z-50 h-18 w-28 cursor-pointer items-center "
+      className="overlay-can-hide absolute bottom-[75px] left-28 z-50 h-12 w-20 cursor-pointer items-center "
     >
       <img
         className="rounded-lg"

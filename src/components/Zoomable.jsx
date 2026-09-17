@@ -62,7 +62,7 @@ function Zoomable({ children }) {
     >
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <>
-          <Controls />
+          {/* <Controls /> */}
           <TransformComponent
             wrapperStyle={{ width: "100vw", height: "100vh" }}
           >

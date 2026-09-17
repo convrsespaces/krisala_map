@@ -5,7 +5,7 @@ function Compass({ angle = 0 }) {
   return (
     <Style
       angle={angle}
-      className="overlay-can-hide absolute right-[1rem] bottom-[12rem]"
+      className="overlay-can-hide absolute right-[1rem] bottom-[75px]"
     >
       <div class="compass__wrapper svelte-aa5lhs">
         <div

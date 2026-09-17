@@ -129,9 +129,9 @@ const Earth_Video = () => {
     const handleError = (e) => {
       console.error('Video playback error:', e.target.error);
       setTimeout(() => {
-      console.log('Video error, navigating to /thirtyfive');
-      navigate(`/thirtyfive${location.search || ""}`);
-    }, 2000);
+        console.log('Video error, navigating to /thirtyfive');
+        navigate(`/thirtyfive${location.search || ""}`);
+      }, 2000);
     };
 
     video.addEventListener('ended', handleVideoEnd);
@@ -178,7 +178,7 @@ const Earth_Video = () => {
         </div>
         <motion.button
           onClick={handleSkip}
-          className="absolute bottom-8 right-8 bg-white text-black font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-200 transition-colors"
+          className="absolute bottom-24 right-8 bg-white text-black font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-200 transition-colors"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}

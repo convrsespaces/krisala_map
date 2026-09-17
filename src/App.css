@@ -28,13 +28,16 @@ body {
   justify-content: center;
   width: 100%;
   z-index: 100;
+
   svg {
     transform: rotate(90deg);
+
     &.rotated {
       transform: rotate(-90deg);
     }
   }
 }
+
 .close-btn {
   width: 90px;
   position: absolute;
@@ -59,6 +62,7 @@ body {
     width: 50px;
   }
 }
+
 .close-btn svg {
   width: 16px;
   height: 8px;
@@ -84,9 +88,23 @@ body {
   }
 }
 
-.tippy-box {
-  background-color: transparent !important;
+/* Repositioned Route Info Theme */
+.tippy-box[data-theme~='repositioned-route-info'] {
+  position: fixed !important;
+  left: 20px !important;
+  top: 15% !important;
+  z-index: 99999 !important;
+  transform: none !important;
+  margin: 0 !important;
+  pointer-events: all !important;
 }
+
+.tippy-box[data-theme~='repositioned-route-info'] .tippy-content {
+  padding: 0 !important;
+}
+
+
+
 
 .tippy-mark {
   /* max-width: 10rem; */
@@ -126,10 +144,12 @@ body {
   background-color: rgb(219, 25, 25);
   color: rgb(245, 243, 243);
 }
+
 .tippy-mark.entertainment {
   background-color: rgb(6, 115, 0);
   color: rgb(245, 243, 243);
 }
+
 .tippy-mark.itpark {
   background-color: rgb(102, 107, 253);
   color: rgb(245, 243, 243);
@@ -145,28 +165,36 @@ body {
   background-color: #ff5454;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.landmarkk {
   background-color: #ff5454;
   backdrop-filter: blur(2px);
 }
+
 .marks.landmark path:first-child {
   fill: #ff5454;
 }
+
 .marks.landmarkk path:first-child {
   fill: #ff5454;
 }
-.marks.marks.landmark > g {
+
+.marks.marks.landmark>g {
   fill: white;
+
   :first-child {
     fill: #ff5454;
   }
 }
-.marks.marks.metro > g {
+
+.marks.marks.metro>g {
   fill: white;
+
   :first-child {
     fill: white;
   }
 }
+
 .tippy-mark.metro {
   background-color: rgba(255, 12, 12, 0.795);
   backdrop-filter: blur(2px);
@@ -185,6 +213,7 @@ body {
 .marks.metro path:first-child {
   fill: #6667af;
 }
+
 /* .marks.hotels path:first-child{
   fill: #6667AF;
 } */
@@ -198,8 +227,9 @@ body {
   fill: #4DBCE0;
 } */
 
-.marks.marks.education > g {
+.marks.marks.education>g {
   fill: white;
+
   :first-child {
     fill: #417fc1;
   }
@@ -214,6 +244,7 @@ body {
   background-color: #6667af;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.busstand {
   background-color: #ec1e24;
   backdrop-filter: blur(2px);
@@ -223,18 +254,22 @@ body {
   background-color: #4c8ac9;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.parks {
   background-color: #3bf31d;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.residential {
   background-color: #c226a9;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.religiousplaces {
   background-color: #5bb8b8;
   backdrop-filter: blur(2px);
 }
+
 .tippy-mark.railwaystation {
   background-color: rgb(184, 0, 3);
   backdrop-filter: blur(2px);
@@ -253,9 +288,11 @@ body {
   0% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-15px);
   }
+
   100% {
     transform: translateY(0);
   }
@@ -265,9 +302,11 @@ body {
   0% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }
+
   100% {
     opacity: 1;
   }
@@ -277,6 +316,7 @@ body {
   animation-name: fadein-fadeout;
   animation-duration: 2s;
   animation-iteration-count: infinite;
+
   &:hover {
     animation: none;
   }
@@ -286,6 +326,7 @@ body {
   animation-name: up-down;
   animation-duration: 2s;
   animation-iteration-count: infinite;
+
   &:hover {
     animation: none;
   }
@@ -327,6 +368,7 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
+
 .no-select:focus {
   outline: none !important;
 }
@@ -419,16 +461,13 @@ body {
 
 /* Hide specific locations when show-all is active - only for 35km map */
 body[data-route="/thirtyfive"].show-all-active [id*="Ruby Hall Clinic"],
-body[data-route="/thirtyfive"].show-all-active
-  [id*="Smt. Karmavati English Medium School"],
+body[data-route="/thirtyfive"].show-all-active [id*="Smt. Karmavati English Medium School"],
 body[data-route="/thirtyfive"].show-all-active [id*="VIBGYOR High School"],
-body[data-route="/thirtyfive"].show-all-active
-  [id*="Akshara International School"],
+body[data-route="/thirtyfive"].show-all-active [id*="Akshara International School"],
 body[data-route="/thirtyfive"].show-all-active [id*="Mhatoba Mandir Hinjawadi"],
 body[data-route="/thirtyfive"].show-all-active [id*="Hotel TipTop"],
 body[data-route="/thirtyfive"].show-all-active [id*="Courtyard Pune Hinjewadi"],
 body[data-route="/thirtyfive"].show-all-active [id*="Sayaji Hotel"],
-body[data-route="/thirtyfive"].show-all-active
-  [id*="International Institute of Information Technology"] {
+body[data-route="/thirtyfive"].show-all-active [id*="International Institute of Information Technology"] {
   display: none !important;
 }

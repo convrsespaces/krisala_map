@@ -12,6 +12,9 @@ export const AppContextProvider = ({ children }) => {
   const [sattellite,setSattelite] = useState(false);
   const [fullScreenMode, setFullScreenMode] = useState(false);
   const [showOverlays, setShowOverlays] = useState(true);
+  const [isMasterplanOpen, setIsMasterplanOpen] = useState(false);
+  const [masterplanRotation, setMasterplanRotation] = useState(null);
+  const [masterplanTransform, setMasterplanTransform] = useState(null);
   const suppressEmitRef = useRef(false);
 
   const { emitSync } = useSocketSync({
@@ -43,6 +46,15 @@ export const AppContextProvider = ({ children }) => {
       if (payload.showOverlays !== undefined) {
         setShowOverlays(payload.showOverlays);
       }
+      if (payload.isMasterplanOpen !== undefined) {
+        setIsMasterplanOpen(payload.isMasterplanOpen);
+      }
+      if (payload.masterplanRotation !== undefined) {
+        setMasterplanRotation(payload.masterplanRotation);
+      }
+      if (payload.masterplanTransform !== undefined) {
+        setMasterplanTransform(payload.masterplanTransform);
+      }
 
       setTimeout(() => {
         suppressEmitRef.current = false;
@@ -62,6 +74,9 @@ export const AppContextProvider = ({ children }) => {
       sattellite,
       fullScreenMode,
       showOverlays,
+      isMasterplanOpen,
+      masterplanRotation,
+      masterplanTransform,
     });
   }, [
     activeMapFilterIds,
@@ -72,6 +87,9 @@ export const AppContextProvider = ({ children }) => {
     sattellite,
     fullScreenMode,
     showOverlays,
+    isMasterplanOpen,
+    masterplanRotation,
+    masterplanTransform,
     emitSync,
   ]);
 
@@ -94,6 +112,12 @@ export const AppContextProvider = ({ children }) => {
         setFullScreenMode,
         showOverlays,
         setShowOverlays,
+        isMasterplanOpen,
+        setIsMasterplanOpen,
+        masterplanRotation,
+        setMasterplanRotation,
+        masterplanTransform,
+        setMasterplanTransform,
       }}
     >
       {children}
