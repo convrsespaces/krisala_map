@@ -15,6 +15,7 @@ export const AppContextProvider = ({ children }) => {
   const [isMasterplanOpen, setIsMasterplanOpen] = useState(false);
   const [masterplanRotation, setMasterplanRotation] = useState(null);
   const [masterplanTransform, setMasterplanTransform] = useState(null);
+  const [masterplanMode, setMasterplanMode] = useState("3d");
   const suppressEmitRef = useRef(false);
 
   const { emitSync } = useSocketSync({
@@ -55,6 +56,9 @@ export const AppContextProvider = ({ children }) => {
       if (payload.masterplanTransform !== undefined) {
         setMasterplanTransform(payload.masterplanTransform);
       }
+      if (payload.masterplanMode !== undefined) {
+        setMasterplanMode(payload.masterplanMode);
+      }
 
       setTimeout(() => {
         suppressEmitRef.current = false;
@@ -77,6 +81,7 @@ export const AppContextProvider = ({ children }) => {
       isMasterplanOpen,
       masterplanRotation,
       masterplanTransform,
+      masterplanMode,
     });
   }, [
     activeMapFilterIds,
@@ -90,6 +95,7 @@ export const AppContextProvider = ({ children }) => {
     isMasterplanOpen,
     masterplanRotation,
     masterplanTransform,
+    masterplanMode,
     emitSync,
   ]);
 
@@ -118,6 +124,8 @@ export const AppContextProvider = ({ children }) => {
         setMasterplanRotation,
         masterplanTransform,
         setMasterplanTransform,
+        masterplanMode,
+        setMasterplanMode,
       }}
     >
       {children}

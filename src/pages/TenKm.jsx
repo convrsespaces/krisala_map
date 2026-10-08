@@ -29,14 +29,7 @@ import { AppContext } from "../context";
 import LabelSvg from "../data/LabelSvgs";
 import LegendFilter from "../components/atoms/LabelLegends";
 import { MapSwitcher10Km } from "../components/LeftSideButton";
-import { DeepZoomViewer } from "../components/DeepZoomViewer";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faRotateRight,
-  faRotateLeft,
-  faRotate,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import MasterplanModal from "../components/MasterplanModal";
 import { useSocketRoom } from "../socket/socket";
 import MarkWithTippy from "../components/MarkWithTippy";
 // import { mark_tenkm_highway } from "../data/mark"; // Commented out for now - will use later
@@ -60,9 +53,7 @@ function TenKm() {
   } = useContext(AppContext);
 
   const [show3DView, setShow3DView] = useState(false); // State for toggling
-  const deepZoomRef = useRef(null);
   const defaultRotation = 0;
-  const rotation = masterplanRotation ?? defaultRotation;
   const setTransformRef = useRef(null);
   const suppressTransformEmitRef = useRef(false);
   const localTransformUpdateRef = useRef(false);
@@ -223,83 +214,7 @@ function TenKm() {
             <MapFilters />
           </CollapsiblePanel>
 
-          {isMasterplanOpen && (
-            <div
-              className="modal"
-              style={{ display: "flex" }} // Add this to override the default 'none'
-              onClick={() => {
-                setIsMasterplanOpen(false);
-                setMasterplanRotation(defaultRotation); // Reset rotation when closing
-              }}
-            >
-              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <span
-                  className="close-btn1"
-                  onClick={() => {
-                    setIsMasterplanOpen(false);
-                    setMasterplanRotation(defaultRotation); // Reset rotation when closing
-                  }}
-                >
-                  &times;
-                </span>
-                <div className="image-container-wrapper">
-                <DeepZoomViewer
-                    ref={deepZoomRef}
-                    rotation={rotation}
-                    minZoomLevel={0.5}
-                    maxZoomLevel={20}
-                    onZoomChange={(zoom) => console.log('Zoom level:', zoom)}
-                    onReady={(viewer) => console.log('[MasterPlan] DeepZoom viewer ready')}
-                  />
-                  <div className="modal-controls">
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => setMasterplanRotation((prev) => (prev ?? defaultRotation) + 90)}
-                            title="Rotate Right"
-                          >
-                            <FontAwesomeIcon icon={faRotateRight} />
-                          </button>
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => setMasterplanRotation((prev) => (prev ?? defaultRotation) - 90)}
-                            title="Rotate Left"
-                          >
-                            <FontAwesomeIcon icon={faRotateLeft} />
-                          </button>
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => {
-                              setMasterplanRotation(defaultRotation);
-                              deepZoomRef.current?.resetView();
-                            }}
-                            title="Reset"
-                          >
-                            <FontAwesomeIcon icon={faRotate} />
-                          </button>
-                          <button
-                            className="modal-control-btn"
-                            onClick={() => {
-                              setIsMasterplanOpen(false);
-                              setMasterplanRotation(defaultRotation);
-                            }}
-                            title="Close"
-                          >
-                            <FontAwesomeIcon icon={faXmark} />
-                          </button>
-</div>
-                </div>
-                <div className="disclaimer-overlay">
-                  <p>
-                    Disclaimer - The number of buildings areas, flats/units,
-                    amenities, specifications, floors, roads, open space, area
-                    of flats/units, elevation/s, etc., shall be revised at the
-                    sole discretion of the Promoter/Developer without any
-                    prior intimation to any person.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          <MasterplanModal defaultRotation={defaultRotation} />
           {/* <Legends /> */}
           <HighwayLegend />
           <MapSwitcher10Km
@@ -349,42 +264,8 @@ const Style = styled.div`
     transform: scale(1.1);
   }
 
-  /* Modal styles */
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    z-index: 1000;
-    display: none; /* Default hidden */
-    align-items: center;
-    justify-content: center;
-  }
 
-  .modal-content {
-    background: white;
-    border: none;
-    padding: 0;
-    position: relative;
-    display: block;
-    width: 100vw;
-    height: 100vh;
-    box-shadow: none;
-    overflow: hidden;
-  }
 
-  .image-container-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
 
   /* Keyframes for the modal entry animation */
   @keyframes evolveIn {
@@ -432,68 +313,11 @@ const Style = styled.div`
     -webkit-user-drag: none;
   }
 
-  .modal-controls {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1005;
-    display: flex;
-    flex-direction: row;
-    gap: 0.5rem;
-    pointer-events: none;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-  }
 
-  .modal-control-btn {
-    width: 40px;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(2px);
-    border: 1px solid white;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #ffffff;
-    font-size: 16px;
-    transition: all 0.2s ease;
-    pointer-events: auto;
-  }
 
-  .modal-control-btn:hover {
-    background: rgba(0, 0, 0, 0.8);
-    transform: scale(1.05);
-  }
 
-  .modal-control-btn:active {
-    background: rgba(0, 0, 0, 0.9);
-    transform: scale(0.95);
-  }
 
-  .disclaimer-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    padding: 12px 20px;
-    z-index: 1002;
-  }
 
-  .disclaimer-overlay p {
-    margin: 0;
-    font-size: 10px;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    text-align: left;
-  }
 
   .zoom-control {
     position: absolute;
